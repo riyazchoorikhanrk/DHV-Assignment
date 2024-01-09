@@ -12,8 +12,8 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 df1 = pd.read_csv("gdp.csv")  # gdp
-df2 = pd.read_csv(
-    "gdp_growth.csv")  # gdp_growth
+
+df2 = pd.read_csv("gdp_growth.csv")  # gdp_growth
 
 # Data Cleaning
 # Example: Handling Missing Values
