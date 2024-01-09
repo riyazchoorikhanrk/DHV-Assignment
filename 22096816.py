@@ -2,6 +2,8 @@
 DHV Assignment: Infographics Project
 Git hub link: https://github.com/riyazchoorikhanrk/DHV-Assignment
 Student number: 22096816
+Data Source:  https://www.kaggle.com/datasets/zgrcemta/world-gdpgdp-gdp-per-capita-and-annual-growths/code
+
 """
 
 import pandas as pd
@@ -9,33 +11,15 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-df1 = pd.read_csv(
-    "gdp.csv")  # gdp
+df1 = pd.read_csv("gdp.csv")  # gdp
 df2 = pd.read_csv(
     "gdp_growth.csv")  # gdp_growth
-
-df1.head()
-
-df2.head()
-
-df1.columns
-
-df1.shape
-
-"""# Exploratory Data ANalysis"""
-
-df1.isnull().sum()
-
-"""## Cleaning the data"""
 
 # Data Cleaning
 # Example: Handling Missing Values
 df1.fillna(0, inplace=True)  # Replace NaN values with 0, you might choose a
 # different strategy
 df2.fillna(0, inplace=True)
-
-df1.isnull().sum()
-df2.isnull().sum()
 
 # Deleting the 'Unnamed: 65' column
 
@@ -46,14 +30,10 @@ df2 = df2.drop("Unnamed: 65", axis=1)
 df1 = df1.rename(columns={'Country Name': 'Country_Name'})
 df2 = df2.rename(columns={'Country Name': 'Country_Name'})
 
-df1.shape
+# Summary statistics using pandas
+df1.describe
 
-"""## Summary statistics using pandas"""
-
-df1.describe()
-
-"""## Summary statistics using Numpy"""
-
+# Summary statistics using numpy
 gdp_values_2020 = df1['2020']
 
 summary_statistics_numpy_2020 = {
@@ -63,10 +43,6 @@ summary_statistics_numpy_2020 = {
     'min': np.min(gdp_values_2020),
     'max': np.max(gdp_values_2020)
 }
-
-summary_statistics_numpy_2020
-
-"""## Using  matplotlib and seaborn libraries to produce visualisations for the above data"""
 
 rows_to_remove = ["Middle income", "North America", "Late-demographic dividend",
                   "Europe & Central Asia", "East Asia & Pacific (excluding high income)", "East Asia & Pacific (IDA & IBRD countries)",
@@ -109,73 +85,62 @@ df1 = df1[~df1['Country_Name'].isin(rows_to_remove)]
 df2 = df2[~df2['Country_Name'].isin(rows_to_remove)]
 
 
-def plot_gdp_comparison(df):
+def plot_gdp_comparison(df, ax=None):
     """
     Plots a comparison of GDP for the top and bottom 10 countries in a specified year.
 
     Parameters:
         df (DataFrame): The DataFrame containing GDP data.
+        ax (Axes, optional): The axes on which to plot. If not provided, a new figure will be created.
 
     Returns:
-        None. The function saves the plot as an image file.
+        None. The function saves the plot as an image file if ax is not provided.
     """
+    if ax is None:
+        _, ax = plt.subplots(figsize=(10, 3))
+
     gdp_columns = df.columns[2:]
     latest_year = '2020'
 
-    top_countries_latest_year = df[[
-        'Country_Name', latest_year]].nlargest(10, latest_year)
     bottom_countries_latest_year = df[[
         'Country_Name', latest_year]].nsmallest(10, latest_year)
 
-    top_countries_latest_year[latest_year] = pd.to_numeric(
-        top_countries_latest_year[latest_year])
     bottom_countries_latest_year[latest_year] = pd.to_numeric(
         bottom_countries_latest_year[latest_year])
 
-    plt.figure(figsize=(15, 8))
-
-    plt.subplot(1, 2, 1)
-    top_chart = sns.barplot(x=top_countries_latest_year[latest_year] / 1e12,
-                            y='Country_Name', data=top_countries_latest_year, palette='viridis')
-    plt.title(f'Top 10 Countries by GDP in {latest_year}')
-    plt.xlabel('GDP (in Trillions)')
-    plt.ylabel('Country')
-
-    for p in top_chart.patches:
-        top_chart.annotate(f'{p.get_width():.2f} Trillion', (p.get_width(),
-                                                             p.get_y() + p.get_height() / 2), ha='center', va='center',
-                           xytext=(5, 0), textcoords='offset points')
-
-    plt.subplot(1, 2, 2)
     bottom_chart = sns.barplot(x=bottom_countries_latest_year[latest_year] / 1e12,
-                               y='Country_Name', data=bottom_countries_latest_year, palette='viridis')
-    plt.title(f'Bottom 10 Countries by GDP in {latest_year}')
-    plt.xlabel('GDP (in Trillions)')
-    plt.ylabel('Country')
+                               y='Country_Name', data=bottom_countries_latest_year, palette='viridis', ax=ax)
+    ax.set_title(f'Bottom 10 Countries by GDP in {latest_year}')
+    ax.set_xlabel('GDP (in Trillions)')
+    ax.set_ylabel('Country')
 
     for p in bottom_chart.patches:
-        bottom_chart.annotate(f'{p.get_width():.5f} Trillion', (p.get_width(),
-                                                                p.get_y() + p.get_height() / 2), ha='center', va='center',
-                              xytext=(5, 0), textcoords='offset points')
+        ax.annotate(f'{p.get_width():.5f} Trillion', (p.get_width(),
+                                                      p.get_y() + p.get_height() / 2), ha='center', va='top',
+                    xytext=(5, 0), textcoords='offset points')
+
+    # Create a legend with country names
+    legend_labels = bottom_countries_latest_year['Country_Name'].tolist()
+    ax.legend(legend_labels, title='Country Names', loc='upper right')
 
     plt.subplots_adjust(wspace=0.3)
     plt.tight_layout()
-    plt.savefig("22096816.png", dpi=300)
 
 
-plot_gdp_comparison(df1)
-
-
-def plot_gdp_growth(df):
+def plot_gdp_growth(df, ax=None):
     """
     Plots the GDP growth over 10-year intervals for the top 5 performing countries in 2020.
 
     Parameters:
         df (DataFrame): The DataFrame containing GDP data.
+        ax (Axes, optional): The axes on which to plot. If not provided, a new figure will be created.
 
     Returns:
-        None. The function saves the plot as an image file.
+        None. The function saves the plot as an image file if ax is not provided.
     """
+    if ax is None:
+        _, ax = plt.subplots(figsize=(10, 3))
+
     gdp_columns = df.columns[2:]
     top_countries_2020 = df[['Country_Name', '2020']].nlargest(10, '2020')
 
@@ -191,76 +156,67 @@ def plot_gdp_growth(df):
     global_gdp_growth_10_years.columns = df['Country_Name'][global_gdp_growth_10_years.columns].tolist(
     )
 
-    plt.figure(figsize=(12, 6))
-
     for country in global_gdp_growth_10_years.columns:
         sns.lineplot(x=global_gdp_growth_10_years.index,
-                     y=global_gdp_growth_10_years[country], label=country)
+                     y=global_gdp_growth_10_years[country], label=country, ax=ax)
 
-    plt.legend(title='Country', loc='upper left', bbox_to_anchor=(1, 1))
-
-    plt.title(
-        'Performance of Top 10  Countries GDP Growth Over 10-Year Intervals from (1960-2020)')
-    plt.xlabel('Year Interval')
-    plt.ylabel('GDP Growth (Average)')
-    plt.grid(True)
-    plt.savefig("22096816_1.png", dpi=300)
+    ax.legend(title='Country', loc='upper left', bbox_to_anchor=(1, 1))
+    ax.set_title(
+        'Performance of Top 10 Countries GDP Growth Over 10-Year Intervals from (1960-2020)')
+    ax.set_xlabel('Year Interval')
+    ax.set_ylabel('GDP Growth (Average)')
+    ax.grid(True)
 
 
-plot_gdp_growth(df1)
-
-
-def plot_china_gdp_growth_comparison(df):
+def plot_china_gdp_growth_comparison(df, ax=None):
     """
     Plots the annual GDP growth comparison of China for the years 2005 and 2019.
 
     Parameters:
         df (DataFrame): The DataFrame containing GDP data.
+        ax (Axes, optional): The axes on which to plot. If not provided, a new figure will be created.
 
     Returns:
-        None. The function saves the plot as an image file.
+        None. The function saves the plot as an image file if ax is not provided.
     """
-    gdp_growth_2005 = df[['Country_Name'] + ['2005']]
-    gdp_growth_2019 = df[['Country_Name'] + ['2019']]
+    if ax is None:
+        _, ax = plt.subplots(figsize=(10, 3))
 
-    top_5_countries_2019 = gdp_growth_2019.nlargest(5, '2019', 'all')
+    gdp_growth_2005 = df[['Country_Name'] + ['2005']]
+
     top_5_countries_2005 = gdp_growth_2005.nlargest(5, '2005', 'all')
 
-    plt.figure(figsize=(15, 6))
-
-    plt.subplot(1, 2, 2)
     colors_2005 = sns.color_palette('pastel')
     colors_2005[4] = 'orange'
     explode_2005 = (0, 0, 0, 0, 0.2)
-    plt.pie(top_5_countries_2005['2005'], labels=top_5_countries_2005['Country_Name'],
-            autopct='%1.1f%%', startangle=90, colors=colors_2005, explode=explode_2005)
-    plt.title('Top 5 Performing Countries in 2005')
+    pie_chart = ax.pie(top_5_countries_2005['2005'], labels=top_5_countries_2005['Country_Name'],
+                       autopct='%1.1f%%', startangle=90, colors=colors_2005, explode=explode_2005)
+    ax.set_title('Top 5 Performing Countries in 2005')
 
-    plt.subplot(1, 2, 1)
-    colors_2019 = sns.color_palette('pastel')
-    colors_2019[1] = 'orange'
-    explode_2019 = (0, 0.2, 0, 0, 0)
-    plt.pie(top_5_countries_2019['2019'], labels=top_5_countries_2019['Country_Name'],
-            autopct='%1.1f%%', startangle=90, colors=colors_2019, explode=explode_2019)
-    plt.title('Top 5 Performing Countries in 2019')
+    # Add a legend with country names
+    ax.legend(top_5_countries_2005['Country_Name'],
+              title='Country Names', loc='lower left')
 
-    plt.suptitle('Annual GDP Growth Comparison of China (2005 vs 2019)')
-    plt.savefig("22096816_2.png", dpi=300)
+    # Optionally, set the legend to the side of the pie chart
+    # ax.legend(top_5_countries_2005['Country_Name'], title='Country Names', loc='center left', bbox_to_anchor=(1, 0.5))
+
+    plt.tight_layout()
 
 
-plot_china_gdp_growth_comparison(df1)
-
-
-def plot_gdp_growth_comparison(df):
+def plot_gdp_growth_comparison(df, ax=None):
     """
     Plots the GDP growth comparison for specified countries between the years 2019 and 2020.
 
     Parameters:
         df (DataFrame): The DataFrame containing GDP data with 'Country_Name' as the index.
+        ax (Axes, optional): The axes on which to plot. If not provided, a new figure will be created.
 
     Returns:
-        None. The function displays the plot using matplotlib and seaborn.
+        None. The function saves the plot as an image file if ax is not provided.
     """
+    if ax is None:
+        _, ax = plt.subplots(figsize=(10, 3))
+
     df.set_index('Country_Name', inplace=True)
 
     countries_of_interest = ["United States",
@@ -269,13 +225,54 @@ def plot_gdp_growth_comparison(df):
 
     df_countries = df_countries.T
 
-    plt.figure(figsize=(10, 6))
-    sns.lineplot(data=df_countries, markers=False)
-    plt.title('GDP Growth Comparison (2019 vs. 2020) in Covid-19 Pandemic')
-    plt.xlabel('Year')
-    plt.ylabel('GDP Value')
-    plt.legend(title='Country')
-    plt.savefig("22096816.png", dpi=300)
+    sns.lineplot(data=df_countries, markers=False, ax=ax)
+    ax.set_title('GDP Growth Comparison (2019 vs. 2020) in Covid-19 Pandemic')
+    ax.set_xlabel('Year')
+    ax.set_ylabel('GDP Value')
+    ax.legend(title='Country')
 
 
-plot_gdp_growth_comparison(df2)
+# Create a single figure with subplots
+fig, axes = plt.subplots(nrows=2, ncols=2, figsize=(22, 20))
+fig.suptitle("Global Economic Landscape (A Visual Exploration of GDP Data of Countries from 1960-2020)",
+             fontsize=30, fontweight='bold')
+fig.set_facecolor('#C4E8F5')
+
+# Plot GDP Comparison
+plot_gdp_comparison(df1, ax=axes[0, 0])
+
+# Plot GDP Growth
+plot_gdp_growth(df1, ax=axes[0, 1])
+
+# Plot China GDP Growth Comparison
+plot_china_gdp_growth_comparison(df1, ax=axes[1, 0])
+
+# Plot GDP Growth Comparison
+plot_gdp_growth_comparison(df2, ax=axes[1, 1])
+
+# Add a common description
+description = (
+    "The United States emerges as the global economic leader, boasting a GDP of $20.5 trillion."
+    "China follows closely with $14.7 trillion, showcasing its substantial economic presence."
+
+    "Multi Line Chart Provides a decade-wise perspective on GDP growth patterns among the top 10 economies."
+    "with China's remarkable growth trajectory stands out, particularly accelerating post-2010 with 8% Average Y-o-Y Gdp growth"
+
+    "Pie Chart Illustrates China's rapid economic expansion and evolving global economic influence."
+    "China undergoes a substantial economic transformation, with GDP growth surging from 8.9% in 2005 to an impressive 30% in 2019."
+
+    "from the line chart its Reflects the global economic downturn resulting from the Covid-19 pandemic, with visible declines in GDP for all countries.")
+
+# Add student information
+student_info = (
+    "     \n\nName     : Riyaz Sardarsab Choorikhan"
+    "     \nStudent ID : 22096816"
+)
+
+fig.text(0.5, 0.02, description, ha='center',
+         va='center', fontsize=15, wrap=True)
+fig.text(0.5, 0.1, student_info, ha='center',
+         va='center', fontsize=16, wrap=True)
+
+plt.tight_layout(rect=[0, 0.09, 1, 0.95])
+plt.savefig("22096816.png", dpi=300)
